@@ -1,0 +1,5 @@
+pandas>=2.0.0
+Bio_Epidemiology_NER
+torch
+transformers
+nltk

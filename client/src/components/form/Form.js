@@ -16,7 +16,9 @@ const questions = [
     { question: 'What is your sex?', questionType: 'options1', options: ['Male', 'Female', 'Other'] },
     { question: 'Do you meet the age requirement?', questionType: 'options2', options: ['I am older than 6 years old.', 'I am filling this out for a child younger than 6 years old.'] },
     { question: 'Do you have any allergies? If so, please write them down?', questionType: 'text' },
-    { question: 'How do you want to improve your health or what health issues do you have?.', questionType: 'text' }
+    { question: 'How do you want to improve your health or what health issues do you have?', questionType: 'text' },
+    { question: 'Preferred supplement brand? (Optional)', questionType: 'text' },
+    { question: 'Should the product be currently on the market? (yes/no)', questionType: 'text' },
 ];
 
 const Form = () => {
@@ -35,6 +37,10 @@ const Form = () => {
     };
 
     useEffect(() => {
+        if (!authUserId) {
+            navigate("/login");
+            return;
+        }
         if (userId !== authUserId) {
             navigate("/");
         }
@@ -48,18 +54,25 @@ const Form = () => {
     const handleSubmit = async () => {
         setSubmitLoading(true);
 
+        // Parse age and market_status
+        const ageBool = answers[1] === questions[1].options[0];
+        const marketStatusBool = answers[5]?.toLowerCase().includes('yes');
+
         const question = {
             gender: answers[0],
-            age: answers[1] === questions[1].options[0] ? true : false,
+            age: ageBool,
             allergies: answers[2],
             description: answers[3],
+            brand: answers[4] || '',
+            market_status: marketStatusBool,
             user_id: authUserId,
         };
 
         await createQuestionAPIMethod(question)
             .then(response => response.json())
             .then(data => {
-                navigate(`/recommendation/${data._id}/${data.age}/${data.description}`);
+                // Pass all relevant info to recommendation page
+                navigate(`/recommendation/${data._id}/${ageBool}/${encodeURIComponent(answers[3])}/${encodeURIComponent(answers[4] || '')}/${marketStatusBool}/${encodeURIComponent(answers[2] || '')}`);
             })
             .catch((err) => {
                 console.error("Error during submission:", err);
@@ -74,18 +87,19 @@ const Form = () => {
 
     useEffect(() => {
         // Set a timeout to hide the component after 5000 milliseconds (5 seconds)
-        const age = answers[1] === questions[1].options[0] ? true : false;
+        const age = answers[1] === questions[1].options[0];
         const description = answers[3];
+        const brand = answers[4] || '';
+        const market_status = answers[5]?.toLowerCase().includes('yes');
+        const allergies = answers[2] || '';
         if (loadingAnimation) {
-            console.log("YEE");
             const timeoutId = setTimeout(() => {
                 setLoadingAnimation(false);
-                navigate(`/recommendation/${age}/${description}`);
+                navigate(`/recommendation/${age}/${encodeURIComponent(description)}/${encodeURIComponent(brand)}/${market_status}/${encodeURIComponent(allergies)}`);
             }, 5000);
             // Cleanup the timeout when the component is unmounted
             return () => clearTimeout(timeoutId);
         }
-
     }, [loadingAnimation]);
 
     return (

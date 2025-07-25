@@ -42,8 +42,10 @@ const Register = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        setErrorMessage(null);
+        setFailed(false);
         if (formData.password !== formData.confirmPwd) {
-            setErrorMessage("Passwords does not match.");
+            setErrorMessage("Passwords do not match.");
             return;
         }
 
@@ -67,20 +69,29 @@ const Register = () => {
                                     dispatch(login(jsonResult));
                                     navigate(`/form/${jsonResult.user._id}`)
                                 });
+                            } else {
+                                setErrorMessage("Registration succeeded but login failed. Please try logging in.");
                             }
                         })
                         .catch((err) => {
+                            setErrorMessage("Registration succeeded but login failed. Please try logging in.");
                             console.error("Error during login:", err);
                         })
                         .finally(() => {
                             setRegisterIsLoading(false);
                         });
                 } else {
-                    console.log("Invalid register");
+                    response.json().then((data) => {
+                        setErrorMessage(data.msg || "Registration failed. Please check your information and make sure that the account has not been created.");
+                    }).catch(() => {
+                        setErrorMessage("Registration failed. Please check your information and make sure that the account has not been created.");
+                    });
                     setFailed(true);
                 }
             })
             .catch((err) => {
+                setErrorMessage("Error registering user. Please try again later.");
+                setFailed(true);
                 console.error("Error registering user:", err);
             })
             .finally(() => {

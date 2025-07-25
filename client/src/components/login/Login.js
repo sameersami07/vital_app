@@ -47,6 +47,7 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        setErrorMessage(null);
         setLoginIsLoading(true);
 
         // let hashedpassword = SHA256(formData.password).toString(enc.Hex);
@@ -64,14 +65,18 @@ const Login = () => {
                         setIsLoggedIn(true);
                     });
                 } else {
+                    res.json().then((data) => {
+                        setErrorMessage(data.msg || "Incorrect username or password");
+                    }).catch(() => {
+                        setErrorMessage("Incorrect username or password");
+                    });
                     setIsLoggedIn(false);
-                    setErrorMessage("Incorrect username or password");
                 }
             })
             .catch((err) => {
-                console.error("Error during login:", err);
                 setIsLoggedIn(false);
-                setErrorMessage("Something went wrong during login");
+                setErrorMessage("Something went wrong during login. Please try again later.");
+                console.error("Error during login:", err);
             })
             .finally(() => {
                 setLoginIsLoading(false);
